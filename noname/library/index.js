@@ -5157,6 +5157,7 @@ export class Library {
 						map.connect_zhong_card.show();
 						map.connect_special_identity.hide();
 						map.connect_double_character.show();
+						map.connect_two_player_identity.hide();
 					} else if (config.connect_identity_mode == "stratagem") {
 						map.connect_double_character.show();
 						map.connect_player_number.show();
@@ -5167,6 +5168,7 @@ export class Library {
 						map.connect_enable_year_limit.show();
 						map.connect_zhong_card.hide();
 						map.connect_special_identity.hide();
+						map.connect_two_player_identity.hide();
 					} else if (config.connect_identity_mode == "purple") {
 						map.connect_player_number.hide();
 						map.connect_limit_zhu.hide();
@@ -5177,6 +5179,7 @@ export class Library {
 						map.connect_zhong_card.hide();
 						map.connect_special_identity.hide();
 						map.connect_double_character.hide();
+						map.connect_two_player_identity.hide();
 					} else {
 						map.connect_double_character.show();
 						map.connect_player_number.show();
@@ -5200,6 +5203,7 @@ export class Library {
 						} else {
 							map.connect_special_identity.hide();
 						}
+						map.connect_two_player_identity.show();
 					}
 				},
 				connect_identity_mode: {
@@ -5265,6 +5269,13 @@ export class Library {
 					init: false,
 					frequent: true,
 					restart: true,
+				},
+				connect_two_player_identity: {
+					name: "双人同阵营",
+					init: false,
+					frequent: true,
+					restart: true,
+					intro: "当房间中恰好只有两位联机玩家时，先为这两名玩家分配同阵营身份，再为其余 AI 分配身份。",
 				},
 				connect_change_card: {
 					name: "启用手气卡",
@@ -11202,19 +11213,20 @@ export class Library {
 						// .getVCards("j", vcard => {
 							if (get.type(vcard) != "delay") {
 								false;
-							} else if (!vcard.storage?.equipEnable) {
+							} else if (!vcard.storage || !vcard.storage.equipEnable) {
 								return false;
 							}
 							return vcard.cards.some(card => get.type(card) == "equip");
 						})
 						.map(vcard => {
-							const sum = vcard.cards?.reduce((sum, card) => {
+							const sum = vcard.cards ? vcard.cards.reduce((sum, card) => {
 								if (get.type(card) != "equip") {
 									return sum;
 								}
-								let globalFrom = get.info(card)?.distance?.globalFrom || 0;
+								const info = get.info(card);
+								let globalFrom = (info && info.distance && info.distance.globalFrom) || 0;
 								return sum + globalFrom;
-							}, 0);
+							}, 0) : 0;
 							return sum || 0;
 						})
 						.reduce((a, b) => a + b, 0);
@@ -11227,19 +11239,20 @@ export class Library {
 						// .getVCards("j", vcard => {
 							if (get.type(vcard) != "delay") {
 								false;
-							} else if (!vcard.storage?.equipEnable) {
+							} else if (!vcard.storage || !vcard.storage.equipEnable) {
 								return false;
 							}
 							return vcard.cards.some(card => get.type(card) == "equip");
 						})
 						.map(vcard => {
-							const sum = vcard.cards?.reduce((sum, card) => {
+							const sum = vcard.cards ? vcard.cards.reduce((sum, card) => {
 								if (get.type(card) != "equip") {
 									return sum;
 								}
-								let globalTo = get.info(card)?.distance?.globalTo || 0;
+								const info = get.info(card);
+								let globalTo = (info && info.distance && info.distance.globalTo) || 0;
 								return sum + globalTo;
-							}, 0);
+							}, 0) : 0;
 							return sum || 0;
 						})
 						.reduce((a, b) => a + b, 0);
@@ -11252,19 +11265,20 @@ export class Library {
 						// .getVCards("j", vcard => {
 							if (get.type(vcard) != "delay") {
 								false;
-							} else if (!vcard.storage?.equipEnable) {
+							} else if (!vcard.storage || !vcard.storage.equipEnable) {
 								return false;
 							}
 							return vcard.cards.some(card => get.type(card) == "equip");
 						})
 						.map(vcard => {
-							const num = vcard.cards?.reduce((sum, card) => {
+							const num = vcard.cards ? vcard.cards.reduce((sum, card) => {
 								if (get.type(card) != "equip") {
 									return sum;
 								}
-								let attackFrom = get.info(card)?.distance?.attackFrom || 0;
+								const info = get.info(card);
+								let attackFrom = (info && info.distance && info.distance.attackFrom) || 0;
 								return sum + attackFrom;
-							}, 0);
+							}, 0) : 0;
 							return num || 0;
 						})
 						.reduce((a, b) => a + b, 0);

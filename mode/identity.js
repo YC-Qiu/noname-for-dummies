@@ -554,6 +554,10 @@ game.import("mode", function (lib, game, ui, get, ai, _status) {
 				uiintro.add(
 					'<div class="text chat">双将模式：' + (lib.configOL.double_character ? "开启" : "关闭")
 				);
+				uiintro.add(
+					'<div class="text chat">双人同阵营：' +
+						(lib.configOL.two_player_identity ? "开启" : "关闭")
+				);
 				if (lib.configOL.identity_mode != "zhong") {
 					if (lib.configOL.identity_mode == "stratagem") {
 						uiintro.add(
@@ -2507,20 +2511,60 @@ game.import("mode", function (lib, game, ui, get, ai, _status) {
 						identityList = get.identityList(game.players.length);
 					}
 					identityList.randomSort();
+					var onlinePlayers = null;
+					if (lib.configOL.two_player_identity) {
+						var onlineOnlyPlayers = game.players.filter(function (current) {
+							return current != game.me && current.isOnline();
+						});
+						if (onlineOnlyPlayers.length == 1) {
+							var bothOnline = [game.me].concat(onlineOnlyPlayers);
+							var pairList = [
+								["zhu", "zhong"],
+								["zhong", "zhong"],
+								["fan", "fan"],
+							].filter(function (pair) {
+								var list = identityList.slice(0);
+								for (var j = 0; j < pair.length; j++) {
+									if (!list.includes(pair[j])) return false;
+									list.remove(pair[j]);
+								}
+								return true;
+							});
+							if (pairList.length) {
+								var pair = pairList.randomGet();
+								pair.randomSort();
+								bothOnline.randomSort();
+								for (i = 0; i < bothOnline.length; i++) {
+									bothOnline[i].identity = pair[i];
+								}
+								for (i = 0; i < pair.length; i++) {
+									identityList.remove(pair[i]);
+								}
+								onlinePlayers = bothOnline;
+							}
+						}
+					}
+					if (onlinePlayers) {
+						for (i = 0; i < game.players.length; i++) {
+							if (onlinePlayers.indexOf(game.players[i]) != -1) continue;
+							game.players[i].identity = identityList.shift();
+						}
+					} else {
+						for (i = 0; i < game.players.length; i++) {
+							game.players[i].identity = identityList[i];
+						}
+					}
 					for (i = 0; i < game.players.length; i++) {
-						game.players[i].identity = identityList[i];
 						game.players[i].setIdentity("cai");
 						game.players[i].node.identity.classList.add("guessing");
 						if (event.zhongmode) {
-							if (identityList[i] == "mingzhong") {
+							if (game.players[i].identity == "mingzhong") {
 								game.zhu = game.players[i];
-							} else if (identityList[i] == "zhu") {
+							} else if (game.players[i].identity == "zhu") {
 								game.zhu2 = game.players[i];
 							}
-						} else {
-							if (identityList[i] == "zhu") {
-								game.zhu = game.players[i];
-							}
+						} else if (game.players[i].identity == "zhu") {
+							game.zhu = game.players[i];
 						}
 						game.players[i].identityShown = false;
 					}
